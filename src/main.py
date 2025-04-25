@@ -69,9 +69,7 @@ app = FastAPI()
 
 # get all data in the database
 @app.get("/data")
-def read_data(
-    session: SessionDep,
-) -> list[Ticker_data]:
+def read_data(session: SessionDep) -> list[Ticker_data]:
     datas = session.exec(select(Ticker_data)).all()
     return datas
 
