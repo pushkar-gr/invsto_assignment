@@ -1,0 +1,37 @@
+services:
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fastapi_app
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_PASSWORD=password
+      - DB_USERNAME=postgres
+      - DB_NAME=invsto_assignment
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - postgresql
+
+  postgresql:
+    image: postgres:15
+    container_name: postgres_db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres # username
+      POSTGRES_PASSWORD: password # password
+      POSTGRES_DB: invsto_assignment # database name
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/copy_data.sql:/copy_data.sql
+      - ./db/create_ticker_table.sql:/create_ticker_table.sql
+      - ./db/init_db.sh:/docker-entrypoint-initdb.d/init_db.sh
+      - ./HINDALCO.csv:/HINDALCO.csv
+
+volumes:
+  postgres_data:
