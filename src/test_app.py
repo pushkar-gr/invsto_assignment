@@ -13,7 +13,7 @@ if DB_HOST == None:
 if DB_PORT == None:
     DB_PORT = "8000"
 
-BASE_URL = "httl://{host}:{port}".format(
+BASE_URL = "http://{host}:{port}".format(
     host=DB_HOST,
     port=DB_PORT,
 )
