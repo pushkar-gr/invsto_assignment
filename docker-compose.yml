@@ -23,15 +23,70 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: postgres # username
-      POSTGRES_PASSWORD: password # password
-      POSTGRES_DB: invsto_assignment # database name
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: invsto_assignment
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/copy_data.sql:/copy_data.sql
       - ./db/create_ticker_table.sql:/create_ticker_table.sql
       - ./db/init_db.sh:/docker-entrypoint-initdb.d/init_db.sh
       - ./HINDALCO.csv:/HINDALCO.csv
+
+  test_fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: test_fastapi_app
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_PASSWORD=password
+      - DB_USERNAME=postgres
+      - DB_NAME=test_invsto_assignment
+      - TEST_MODE=true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - test_postgresql
+    profiles:
+      - test
+
+  test_runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: test_runner
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_PASSWORD=password
+      - DB_USERNAME=postgres
+      - DB_NAME=test_invsto_assignment
+      - TEST_MODE=true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - test_fastapi
+    command: python test_app.py
+    profiles:
+      - test
+
+  test_postgresql:
+    image: postgres:15
+    container_name: test_postgres_db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: test_invsto_assignment
+    volumes:
+      - ./db/create_ticker_table.sql:/create_ticker_table.sql
+      - ./db/init_test_db.sh:/docker-entrypoint-initdb.d/init_test_db.sh
+    profiles:
+      - test
 
 volumes:
   postgres_data:
